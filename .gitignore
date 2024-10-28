@@ -1,0 +1,10 @@
+# Ignore editor specific files
+.idea
+
+# Ignore node_modules
+node_modules
+
+# Ignore environment file
+.env
+
+gdeliver

@@ -1,0 +1,10 @@
+iteration 1: 
+    -get data from shopify store
+    -send the data to chowdeck to process and return delivery cost
+    -return the value to the shofpify store
+
+
+iteration 2:
+    - create an endpoint to recieve a request containing data from shopify
+    - use the data to create a request to chowdeck api expecting a response containing delivery cost
+    - send the delivery cost as response back to the shopify client

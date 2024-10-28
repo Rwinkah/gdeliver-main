@@ -1,0 +1,9 @@
+authtoken: 2OfShiE8Of2k4lW2QD3MN6ICzLi_4eSn8gDckzRzpzXrowmKf
+  # Replace with your actual ngrok auth token
+tunnels:
+  app1:
+    proto: http
+    addr: 3030
+  app2:
+    proto: http
+    addr: 4000
