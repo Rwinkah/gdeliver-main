@@ -222,6 +222,10 @@ app.post("/shopify/webhooks/order/create", async (req, res) => {
 	}
 });
 
+app.post("/shopify/checkout", async (req, res) => {
+	console.log(res.body);
+	res.send(200).json({ body: req.body });
+});
 app.post("/shopify/webhook/checkout/update", async (req, res) => {
 	console.log(req.body);
 });
