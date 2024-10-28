@@ -50,9 +50,6 @@ class Chowdeck {
 				console.log("Response data:", error.response.data);
 				console.log("Response status:", error.response.status);
 				console.log("Response headers:", error.response.headers);
-				throw new Error(
-					error.response.data.message || "Unknown error occurred"
-				);
 			} else if (error.request) {
 				// The request was made but no response was received
 				console.log("Request data:", error.request);
