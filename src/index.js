@@ -4,12 +4,15 @@ import Chowdeck from "./chowdeck.js";
 import dotenv from "dotenv";
 import Shopify from "./shopify.js";
 import bodyParser from "body-parser";
+import cors from "cors";
 
 const app = express();
 const port = 4000;
+
 dotenv.config();
 
 app.use(express.json());
+app.use(cors({ origin: "*" }));
 app.use(bodyParser.json());
 
 const CLICK_N_SHIP_USERNAME = process.env.CLICK_N_SHIP_USERNAME;
@@ -223,8 +226,8 @@ app.post("/shopify/webhooks/order/create", async (req, res) => {
 });
 
 app.post("/shopify/checkout", async (req, res) => {
-	console.log(req.body);
-	res.status(200).json({ body: req.body });
+	const nebody = req.body;
+	res.status(200).json({ body: nebody });
 });
 app.post("/shopify/webhook/checkout/update", async (req, res) => {
 	console.log(req.body);
