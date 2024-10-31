@@ -30,7 +30,7 @@ class Chowdeck {
 			Accept: "application/json",
 			Authorization: `Bearer ${this.CHOWDECK_INTEGRATION_KEY}`,
 		};
-		console.log("Request Headers:", headers);
+		// console.log("Request Headers:", headers);
 		let response;
 
 		try {
@@ -40,24 +40,43 @@ class Chowdeck {
 				">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 			);
 			console.log("Response Data:", response.data);
-
-			return response.data;
+			return {
+				result: true,
+				desc: "fee calculated successfully",
+				error: 0,
+				code: 200,
+				response: response.data,
+			};
 		} catch (error) {
 			// console.log(error);
-			if (error.response) {
+			if (error.response.status === 500) {
 				// The request was made and the server responded with a status code
 				// that falls out of the range of 2xx
-				console.log("Response data:", error.response.data);
-				console.log("Response status:", error.response.status);
-				console.log("Response headers:", error.response.headers);
+				console.log("Response data for server error:", error.response.data);
+				return {
+					result: false,
+					desc: "distance was too large",
+					code: 500,
+					error: 5001,
+				};
 			} else if (error.request) {
 				// The request was made but no response was received
-				console.log("Request data:", error.request);
-				throw new Error("No response received from server");
+				console.log("Request data:", error.response.data);
+				return {
+					result: false,
+					desc: error.response.data.message,
+					code: error.status,
+					error: 4001,
+				};
 			} else {
 				// Something happened in setting up the request that triggered an Error
 				console.log("Error message:", error.message);
-				throw new Error(error.message);
+				return {
+					result: false,
+					desc: "A Server error has occured try again ",
+					code: 500,
+					error: 4050,
+				};
 			}
 		}
 	}

@@ -3,8 +3,9 @@ import ClickNShip from "./clickNShip.js";
 import Chowdeck from "./chowdeck.js";
 import dotenv from "dotenv";
 import Shopify from "./shopify.js";
-import bodyParser from "body-parser";
+// import bodyParser from "body-parser";
 import cors from "cors";
+import Google from "./google.js";
 
 const app = express();
 const port = 4000;
@@ -13,7 +14,6 @@ dotenv.config();
 
 app.use(express.json());
 app.use(cors({ origin: "*" }));
-app.use(bodyParser.json());
 
 const CLICK_N_SHIP_USERNAME = process.env.CLICK_N_SHIP_USERNAME;
 const CLICK_N_SHIP_PASSWORD = process.env.CLICK_N_SHIP_PASSWORD;
@@ -28,6 +28,8 @@ const chowdeckIntegration = new Chowdeck(
 	CHOWDECK_MERCHANT_REFERENCE,
 	CHOWDECK_INTEGRATION_KEY
 );
+
+const googleIntegration = new Google();
 
 const shopifyIntegration = new Shopify();
 // ClickNShip routes
@@ -49,10 +51,6 @@ app.get("/clicknship/cities/:stateName", async (req, res) => {
 	} catch (error) {
 		res.status(500).json({ error: error.message });
 	}
-});
-
-app.get("/test", (req, res) => {
-	res.status(200).json({ win: "hello world" });
 });
 
 app.get("/clicknship/towns/:cityCode", async (req, res) => {
@@ -225,54 +223,88 @@ app.post("/shopify/webhooks/order/create", async (req, res) => {
 	}
 });
 
-app.post("/shopify/checkout", async (req, res) => {
-	const nebody = req.body;
-	res.status(200).json({ body: nebody });
-});
-app.post("/shopify/webhook/checkout/update", async (req, res) => {
-	console.log(req.body);
-});
+app.post("/shopify/checkout", async (req, res, next) => {
+	const address = req.body.address;
+	console.log(address);
+	const geocodeResponse = await googleIntegration.getGeocoding(address, next);
 
-app.get("/test-integration", async (req, res) => {
-	const source_address = await shopifyIntegration.getInventoryLocation();
+	if (geocodeResponse.status === 400) {
+		console.log("no address found");
+		res.status(400).json({ error: "no address found" });
+	}
 
 	const destination_address = {
-		latitude: 6.578996999999999,
-		longitude: 3.3494666,
+		longitude: geocodeResponse.data.results[0].geometry.location.lng,
+		latitude: geocodeResponse.data.results[0].geometry.location.lat,
 	};
 
-	const fee = await chowdeckIntegration.createDeliveryFee(
-		source_address,
-		destination_address
-	);
-
-	res.json({ fee: fee });
-});
-
-app.get("/test-fee", async (req, res) => {
 	try {
-		const fee = await chowdeckIntegration.createDeliveryFee(
-			{
-				latitude: 6.601838,
-				longitude: 3.3514863,
-			},
-			{
-				latitude: 6.578996999999999,
-				longitude: 3.3494666,
-			}
-		);
-		// res.status(200).send({ fee: fee });
-		// return fee;
-		// res.status(200).send({ fee: fee });
-		console.log(fee);
-		if (!fee) {
-			res.status(500).send({ error: "error has happeneds" });
+		const source_address = await shopifyIntegration.getInventoryLocation();
+
+		// Check if sourceContact response is okay
+		if (
+			!source_address ||
+			!source_address.latitude ||
+			!source_address.longitude
+		) {
+			return res
+				.status(400)
+				.send({ error: "Source contact latitude and longitude are required." });
+		} else {
+			console.log("INVENTORY FOUND\n", source_address, "\n");
 		}
+
+		// Calculate delveryFee
+		console.log(
+			">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+		);
+		console.log("CALCULATING DELIVERY FEE");
+		console.log(
+			"DELIVERY DETAILS\n",
+			"SOURCE ADDRESS\n",
+			source_address,
+			"\n",
+			"DESTINATION ADDRESS\n",
+			destination_address
+		);
+		const delivery = await chowdeckIntegration.createDeliveryFee(
+			source_address,
+			destination_address
+		);
+		console.log("result for delivery fee", delivery);
+
+		// Send the response back to Shopify
+		return res.status(delivery.code).send(delivery);
 	} catch (error) {
-		console.log(error);
-		res.json({ error: error });
+		console.error("Error processing order:", error);
+		return res.status(500).send({ error: "Internal Server Error" });
 	}
 });
+
+// GOOGLE ROUTES
+
+app.post("/google/geocode", async (req, res) => {
+	const address = req.body.address;
+	console.log("address", address);
+	if (!address) {
+		res.status(400).json({ ERROR: "Bad Request, missing address variable" });
+		console.log("Bad Request, missing address variable");
+		return;
+	}
+	const response = await googleIntegration.getGeocoding(address);
+	console.log(response.data);
+	if (response.data.results === undefined || response.data.results.length < 1) {
+		res
+			.status(400)
+			.json({ ERROR: "Bad Request, cannot find the specified address" });
+		console.log("Bad Request, cannot find the specified address");
+		return;
+	}
+	res
+		.status(200)
+		.json({ response: response.data.results[0].geometry.location });
+});
+
 app.use((req, res, next) => {
 	res.status(404).json({
 		status: "error",
