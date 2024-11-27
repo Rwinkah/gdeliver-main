@@ -173,7 +173,10 @@ app.post("/shopify/webhooks/order/create", async (req, res) => {
 		">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 	);
 	console.log("ORDER RECIEVED");
-
+	console.log(
+		">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+	);
+	console.log(orderData);
 	if (!shippingAddress) {
 		res
 			.status(400)
