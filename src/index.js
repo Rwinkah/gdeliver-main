@@ -13,7 +13,26 @@ const port = 4000;
 dotenv.config();
 
 app.use(express.json());
-app.use(cors({ origin: "*" }));
+app.use(
+	cors({
+		origin: "*", // Only use this for testing. Do not use in production.
+		methods: ["GET", "POST", "OPTIONS"],
+		allowedHeaders: ["Content-Type", "Authorization"],
+	})
+);
+app.options("*", cors()); // Allow CORS preflight requests for all routes
+app.use((req, res, next) => {
+	res.header("Access-Control-Allow-Origin", "https://shop.nettpharmacy.com"); // Replace with your domain
+	res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+	res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+	// Handle preflight requests
+	if (req.method === "OPTIONS") {
+		return res.sendStatus(200);
+	}
+
+	next();
+});
 
 const CLICK_N_SHIP_USERNAME = process.env.CLICK_N_SHIP_USERNAME;
 const CLICK_N_SHIP_PASSWORD = process.env.CLICK_N_SHIP_PASSWORD;
@@ -32,6 +51,12 @@ const chowdeckIntegration = new Chowdeck(
 const googleIntegration = new Google();
 
 const shopifyIntegration = new Shopify();
+
+//TEST ROUTES
+app.get("/test", async (req, res) => {
+	console.log("backedn working");
+	res.status(200).send("hello");
+});
 // ClickNShip routes
 app.get("/clicknship/states", async (req, res) => {
 	try {
@@ -223,14 +248,42 @@ app.post("/shopify/webhooks/order/create", async (req, res) => {
 	}
 });
 
-app.post("/shopify/checkout", async (req, res, next) => {
-	const address = req.body.address;
+app.post("/shopify/webhook/carrier", async (req, res, next) => {
+	// const address = req.body.address;
+	const currentDate = new Date();
+
+	// Calculate min_delivery_date (1 day from today)
+	const minDeliveryDate = new Date(currentDate);
+	minDeliveryDate.setDate(currentDate.getDate() + 1);
+
+	// Calculate max_delivery_date (7 days from today)
+	const maxDeliveryDate = new Date(currentDate);
+	maxDeliveryDate.setDate(currentDate.getDate() + 7);
+
+	// Format the dates as YYYY-MM-DD
+	const formattedMinDeliveryDate = minDeliveryDate.toISOString().split("T")[0];
+	const formattedMaxDeliveryDate = maxDeliveryDate.toISOString().split("T")[0];
+
+	const shippingRates = [
+		{
+			service_name: "Gdelivery",
+			service_code: "GDELIVER",
+			total_price: 10, // price in cents (e.g., 1000 cents = $10)
+			currency: "NGN",
+			min_delivery_date: formattedMinDeliveryDate,
+			max_delivery_date: formattedMaxDeliveryDate,
+		},
+	];
+	const street = req.body.rate.destination.address1;
+	const city = req.body.rate.destination.city;
+	const province = req.body.rate.destination.province;
+	const address = `${street} ${city} ${province}`;
 	console.log(address);
 	const geocodeResponse = await googleIntegration.getGeocoding(address, next);
 
 	if (geocodeResponse.status === 400) {
 		console.log("no address found");
-		res.status(400).json({ error: "no address found" });
+		return res.status(400).json({ error: "no address found" });
 	}
 
 	const destination_address = {
@@ -273,12 +326,83 @@ app.post("/shopify/checkout", async (req, res, next) => {
 		);
 		console.log("result for delivery fee", delivery);
 
+		if (delivery.result === false || delivery.result === undefined) {
+			console.log(">>>>>>>>>>>>>>>>>>>.");
+			console.log("fail");
+			return res.status(400).send();
+		}
+		console.log(">>>>>>>>>>>>>>>>>>>");
+		console.log("delivery");
+		console.log(delivery);
+		shippingRates[0].total_price = delivery.response.data.delivery_amount;
+		console.log(shippingRates[0]);
+
 		// Send the response back to Shopify
-		return res.status(delivery.code).send(delivery);
+		res.json({ rates: shippingRates });
+		return;
 	} catch (error) {
 		console.error("Error processing order:", error);
 		return res.status(500).send({ error: "Internal Server Error" });
 	}
+});
+
+// app.post("/shopify/webhook/carrier", async (req, res) => {
+// 	const address = req.body.rate.destination.address1;
+// 	const geocodeResponse = await googleIntegration.getGeocoding(address, next);
+
+// 	const currentDate = new Date();
+
+// 	// Calculate min_delivery_date (1 day from today)
+// 	const minDeliveryDate = new Date(currentDate);
+// 	minDeliveryDate.setDate(currentDate.getDate() + 1);
+
+// 	// Calculate max_delivery_date (7 days from today)
+// 	const maxDeliveryDate = new Date(currentDate);
+// 	maxDeliveryDate.setDate(currentDate.getDate() + 7);
+
+// 	// Format the dates as YYYY-MM-DD
+// 	const formattedMinDeliveryDate = minDeliveryDate.toISOString().split("T")[0];
+// 	const formattedMaxDeliveryDate = maxDeliveryDate.toISOString().split("T")[0];
+// 	const shippingRates = [
+// 		{
+// 			service_name: "Gdelivery",
+// 			service_code: "CHOWDEX",
+// 			total_price: 10, // price in cents (e.g., 1000 cents = $10)
+// 			currency: "NGN",
+// 			min_delivery_date: formattedMinDeliveryDate,
+// 			max_delivery_date: formattedMaxDeliveryDate,
+// 		},
+// 	];
+
+// 	// Send rates back to Shopify
+// 	res.json({ rates: shippingRates });
+// });
+app.post("/extensions", async (req, res) => {
+	const shippingRates = [
+		{
+			service_name: "Gdelivery",
+			service_code: "CHOWDEX",
+			total_price: 10, // price in cents (e.g., 1000 cents = $10)
+			currency: "NGN",
+			min_delivery_date: "2024-12-01",
+			max_delivery_date: "2024-12-03",
+		},
+	];
+
+	// Send rates back to Shopify
+	res.json({ rates: shippingRates });
+});
+app.get("/update-carrier", async (req, res) => {
+	const response = shopifyIntegration.updateCarrierService(
+		"62191665239",
+		" https://gdeliver-main-60ft.onrender.com/shopify/webhook/carrier"
+	);
+	return res.status(200).json(response);
+});
+
+app.get("/register", async (req, res) => {
+	const response = await shopifyIntegration.registerCarrierService();
+	return res.status(200).json(response);
 });
 
 // GOOGLE ROUTES
@@ -287,9 +411,10 @@ app.post("/google/geocode", async (req, res) => {
 	const address = req.body.address;
 	console.log("address", address);
 	if (!address) {
-		res.status(400).json({ ERROR: "Bad Request, missing address variable" });
 		console.log("Bad Request, missing address variable");
-		return;
+		return res
+			.status(400)
+			.json({ ERROR: "Bad Request, missing address variable" });
 	}
 	const response = await googleIntegration.getGeocoding(address);
 	console.log(response.data);

@@ -88,6 +88,73 @@ class Shopify {
 			throw error;
 		}
 	}
+
+	/**
+	 * Register a carrier service for custom shipping rates
+	 * @returns {Promise<object>} An object containing details of the registered carrier service
+	 * @throws Will throw an error if the registration fails
+	 */
+	async registerCarrierService() {
+		const url = `${this.baseUrl}/carrier_services.json`;
+		const data = {
+			carrier_service: {
+				name: "Gdelivery",
+				callback_url: "https://3733-197-211-59-110.ngrok-free.app/gdeliver",
+				service_discovery: true,
+				format: "json",
+			},
+		};
+
+		try {
+			const response = await axios.post(url, data, {
+				headers: {
+					Authorization: `Basic ${this.base64Credentials}`,
+					"Content-Type": "application/json",
+				},
+			});
+			console.log("Carrier Service Registered:", response.data);
+			return response.data;
+		} catch (error) {
+			console.error("Error registering carrier service:", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Update the callback URL for the Carrier Service
+	 * @param {string} carrierServiceId - The ID of the carrier service to update
+	 * @param {string} newCallbackUrl - The new callback URL to set
+	 * @returns {Promise<object>} - The updated carrier service data
+	 * @throws Will throw an error if the update fails
+	 */
+	async updateCarrierService(carrierServiceId, newCallbackUrl) {
+		const url = `${this.baseUrl}/carrier_services/${carrierServiceId}.json`;
+
+		try {
+			const response = await axios.put(
+				url,
+				{
+					carrier_service: {
+						callback_url: newCallbackUrl,
+						// Keep existing properties unchanged
+						service_discovery: true,
+					},
+				},
+				{
+					headers: {
+						Authorization: `Basic ${this.base64Credentials}`,
+						"Content-Type": "application/json",
+					},
+				}
+			);
+
+			console.log("Carrier service updated:", response.data);
+			return response.data;
+		} catch (error) {
+			console.error("Error updating carrier service:", error);
+			throw error;
+		}
+	}
 }
 
 export default Shopify;
