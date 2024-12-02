@@ -272,7 +272,7 @@ app.post("/shopify/webhooks/order/create", async (req, res) => {
 			orderCreateData
 		);
 
-		console.log(createDelivery.data);
+		console.log(orderCreateData);
 
 		// Send the response back to Shopify
 		return res.status(200).send(delivery.data);
