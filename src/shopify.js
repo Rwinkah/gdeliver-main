@@ -138,7 +138,7 @@ class Shopify {
 					"Content-Type": "application/json",
 				},
 			});
-			console.log("Carrier Service Registered:", response.data);
+			console.log("Carrier Service Registered successfully:");
 			return response.data;
 		} catch (error) {
 			console.error("Error registering carrier service:", error);
@@ -174,7 +174,7 @@ class Shopify {
 				}
 			);
 
-			console.log("Carrier service updated:", response.data);
+			console.log("Carrier service updated successfully:");
 			return response.data;
 		} catch (error) {
 			console.error("Error updating carrier service:", error);

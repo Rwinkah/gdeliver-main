@@ -24,7 +24,7 @@ class Chowdeck {
 			">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 		);
 		console.log("SENDING REQUEST WITH JSON DATA:");
-		console.log(JSON.stringify(data));
+		// console.log(JSON.stringify(data));
 		const headers = {
 			"Content-Type": "application/json",
 			Accept: "application/json",
@@ -39,7 +39,7 @@ class Chowdeck {
 			console.log(
 				">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 			);
-			console.log("Response Data:", response.data);
+			// console.log("Response Data:", response.data);
 			return {
 				result: true,
 				desc: "fee calculated successfully",
@@ -61,7 +61,7 @@ class Chowdeck {
 				};
 			} else if (error.request) {
 				// The request was made but no response was received
-				console.log("Request data:", error.response.data);
+				// console.log("Request data:", error.response.data);
 				return {
 					result: false,
 					desc: error.response.data.message,
@@ -111,9 +111,10 @@ class Chowdeck {
 		try {
 			response = await axios.post(url, data, { headers });
 
-			console.log(response.data);
+			// console.log(response.data);
 
 			if (response.status === "success") {
+				console.log("order created successfully");
 				return response.data;
 			}
 		} catch (error) {

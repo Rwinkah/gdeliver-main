@@ -267,8 +267,11 @@ app.post("/shopify/webhooks/order/create", async (req, res) => {
 			customer_delivery_note: "",
 		};
 
-		const createDelivery =
-			chowdeckIntegration.createDeliveryOrder(orderCreateData);
+		const createDelivery = await chowdeckIntegration.createDeliveryOrder(
+			orderCreateData
+		);
+
+		console.log(createDelivery.data);
 
 		// Send the response back to Shopify
 		return res.status(200).send(delivery.data);
