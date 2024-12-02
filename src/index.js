@@ -244,6 +244,7 @@ app.post("/shopify/webhooks/order/create", async (req, res) => {
 		);
 
 		console.log("CREATING ORDER");
+		console.log(deliveryFee);
 		const feeId = await deliveryFee.response.data.feeId;
 		const locationDetails =
 			await shopifyIntegration.getInventoryLocationDetails();
