@@ -238,7 +238,7 @@ app.post("/shopify/webhooks/order/create", async (req, res) => {
 			"DESTINATION ADDRESS\n",
 			destination_address
 		);
-		const deliveryFee = chowdeckIntegration.createDeliveryFee(
+		const deliveryFee = await chowdeckIntegration.createDeliveryFee(
 			source_address,
 			destination_address
 		);
