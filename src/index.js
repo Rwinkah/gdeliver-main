@@ -238,10 +238,37 @@ app.post("/shopify/webhooks/order/create", async (req, res) => {
 			"DESTINATION ADDRESS\n",
 			destination_address
 		);
-		const delivery = chowdeckIntegration.createDeliveryFee(
+		const deliveryFee = chowdeckIntegration.createDeliveryFee(
 			source_address,
 			destination_address
 		);
+
+		console.log("CREATING ORDER");
+		const feeId = await deliveryFee.response.data.feeId;
+		const locationDetails =
+			await shopifyIntegration.getInventoryLocationDetails();
+
+		const orderCreateData = {
+			destination_contact: {
+				name: shippingAddress.name,
+				phone: shippingAddress.phone,
+				country_code: "NG",
+				email: orderData.customer.email,
+			},
+			source_contact: {
+				name: locationDetails.name,
+				phone: locationDetails.phone,
+				country_code: locationDetails.country_code,
+				email: locationDetails.email,
+			},
+			fee_id: feeId,
+			item_type: "pharmaceuticals",
+			user_action: "sending",
+			customer_delivery_note: "",
+		};
+
+		const createDelivery =
+			chowdeckIntegration.createDeliveryOrder(orderCreateData);
 
 		// Send the response back to Shopify
 		return res.status(200).send(delivery.data);

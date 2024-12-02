@@ -90,12 +90,12 @@ class Chowdeck {
 	 * @returns {Promise<*>}
 	 * @throws Error
 	 */
-	async createDeliveryOrder(
+	async createDeliveryOrder({
 		sourceContact,
 		destinationContact,
 		feeId,
-		itemType
-	) {
+		itemType,
+	}) {
 		const url = this.getCreateDeliveryOrderUrl();
 		const data = {
 			source_contact: sourceContact,
@@ -106,18 +106,24 @@ class Chowdeck {
 		};
 		const headers = this.getRequestHeaders();
 
-		let response = await fetch(url, {
-			method: "POST",
-			headers,
-			body: JSON.stringify(data),
-		});
-		response = await response.json();
+		let response;
 
-		if (response.status === "success") {
-			return response.data;
+		try {
+			response = await axios.post(url, data, { headers });
+
+			console.log(response.data);
+
+			if (response.status === "success") {
+				return response.data;
+			}
+		} catch (error) {
+			console.log("An errorr has occured", error);
+			return {
+				status: failed,
+				desc: error.respone.data.message,
+				code: error.status,
+			};
 		}
-
-		throw new Error(response.message);
 	}
 
 	/**

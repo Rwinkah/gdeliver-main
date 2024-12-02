@@ -89,6 +89,32 @@ class Shopify {
 		}
 	}
 
+	async getInventoryLocationDetails(id = this.defaultID) {
+		const locationID = id;
+		try {
+			const response = await fetch(
+				`${this.baseUrl}/locations/${locationID}.json`,
+				{
+					method: "GET",
+					headers: {
+						Authorization: `Basic ${this.base64Credentials}`,
+						"Content-Type": "application/json",
+					},
+				}
+			);
+			const locationDetails = await response.json();
+
+			// Extract latitude and longitude from the metadata if available
+
+			// Extract lattitude and longitude from the metadata if available
+
+			return { locationDetails };
+		} catch (error) {
+			console.error("Error fetching location details:", error);
+			throw error;
+		}
+	}
+
 	/**
 	 * Register a carrier service for custom shipping rates
 	 * @returns {Promise<object>} An object containing details of the registered carrier service
