@@ -176,7 +176,7 @@ app.post("/shopify/webhooks/order/create", async (req, res) => {
 	console.log(
 		">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 	);
-	console.log(orderData);
+	// console.log(orderData);
 	if (!shippingAddress) {
 		res
 			.status(400)
@@ -185,7 +185,7 @@ app.post("/shopify/webhooks/order/create", async (req, res) => {
 		return;
 	}
 
-	console.log("SHIPPING ADDRESS\n", shippingAddress);
+	// console.log("SHIPPING ADDRESS\n", shippingAddress);
 
 	// Extract latitude and longitude from the shipping address
 	const customerLatitude = shippingAddress.latitude;
@@ -222,7 +222,7 @@ app.post("/shopify/webhooks/order/create", async (req, res) => {
 				.status(400)
 				.send({ error: "Source contact latitude and longitude are required." });
 		} else {
-			console.log("INVENTORY FOUND\n", source_address, "\n");
+			// console.log("INVENTORY FOUND\n", source_address, "\n");
 		}
 
 		// Calculate delveryFee
@@ -244,7 +244,7 @@ app.post("/shopify/webhooks/order/create", async (req, res) => {
 		);
 
 		console.log("CREATING ORDER");
-		console.log(deliveryFee);
+		// console.log(deliveryFee);
 		const feeId = await deliveryFee.response.data.feeId;
 		const locationDetails =
 			await shopifyIntegration.getInventoryLocationDetails();
@@ -312,7 +312,7 @@ app.post("/shopify/webhook/carrier", async (req, res, next) => {
 	const city = req.body.rate.destination.city;
 	const province = req.body.rate.destination.province;
 	const address = `${street} ${city} ${province}`;
-	console.log(address);
+	// console.log(address);s
 	const geocodeResponse = await googleIntegration.getGeocoding(address, next);
 
 	if (geocodeResponse.status === 400) {
@@ -338,7 +338,7 @@ app.post("/shopify/webhook/carrier", async (req, res, next) => {
 				.status(400)
 				.send({ error: "Source contact latitude and longitude are required." });
 		} else {
-			console.log("INVENTORY FOUND\n", source_address, "\n");
+			// console.log("INVENTORY FOUND\n", source_address, "\n");
 		}
 
 		// Calculate delveryFee
@@ -346,19 +346,19 @@ app.post("/shopify/webhook/carrier", async (req, res, next) => {
 			">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 		);
 		console.log("CALCULATING DELIVERY FEE");
-		console.log(
-			"DELIVERY DETAILS\n",
-			"SOURCE ADDRESS\n",
-			source_address,
-			"\n",
-			"DESTINATION ADDRESS\n",
-			destination_address
-		);
+		// console.log(
+		// 	"DELIVERY DETAILS\n",
+		// 	"SOURCE ADDRESS\n",
+		// 	source_address,
+		// 	"\n",
+		// 	"DESTINATION ADDRESS\n",
+		// 	destination_address
+		// );
 		const delivery = await chowdeckIntegration.createDeliveryFee(
 			source_address,
 			destination_address
 		);
-		console.log("result for delivery fee", delivery);
+		// console.log("result for delivery fee", delivery);
 
 		if (delivery.result === false || delivery.result === undefined) {
 			console.log(">>>>>>>>>>>>>>>>>>>.");
@@ -367,9 +367,9 @@ app.post("/shopify/webhook/carrier", async (req, res, next) => {
 		}
 		console.log(">>>>>>>>>>>>>>>>>>>");
 		console.log("delivery");
-		console.log(delivery);
+		// console.log(delivery);
 		shippingRates[0].total_price = delivery.response.data.delivery_amount;
-		console.log(shippingRates[0]);
+		// console.log(shippingRates[0]);
 
 		// Send the response back to Shopify
 		res.json({ rates: shippingRates });
@@ -443,7 +443,7 @@ app.get("/register", async (req, res) => {
 
 app.post("/google/geocode", async (req, res) => {
 	const address = req.body.address;
-	console.log("address", address);
+	// console.log("address", address);
 	if (!address) {
 		console.log("Bad Request, missing address variable");
 		return res
@@ -451,7 +451,7 @@ app.post("/google/geocode", async (req, res) => {
 			.json({ ERROR: "Bad Request, missing address variable" });
 	}
 	const response = await googleIntegration.getGeocoding(address);
-	console.log(response.data);
+	// console.log(response.data);
 	if (response.data.results === undefined || response.data.results.length < 1) {
 		res
 			.status(400)

@@ -118,7 +118,7 @@ class Chowdeck {
 				return response.data;
 			}
 		} catch (error) {
-			console.log("An errorr has occured", error);
+			// console.log("An errorr has occured", error);
 			return {
 				status: failed,
 				desc: error.respone.data.message,
