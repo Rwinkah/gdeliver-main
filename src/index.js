@@ -268,11 +268,11 @@ app.post("/shopify/webhooks/order/create", async (req, res) => {
 			customer_delivery_note: "",
 		};
 
+		console.log(orderCreateData);
+
 		const createDelivery = await chowdeckIntegration.createDeliveryOrder(
 			orderCreateData
 		);
-
-		console.log(orderCreateData);
 
 		// Send the response back to Shopify
 		return res.status(200).send(delivery.data);
@@ -375,7 +375,7 @@ app.post("/shopify/webhook/carrier", async (req, res, next) => {
 		res.json({ rates: shippingRates });
 		return;
 	} catch (error) {
-		console.error("Error processing order:", error);
+		console.error("Error calculating rate:", error);
 		return res.status(500).send({ error: "Internal Server Error" });
 	}
 });
